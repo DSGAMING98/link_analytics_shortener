@@ -14,8 +14,8 @@ st.set_page_config(
 
 init_db()
 
-# REPLACE THIS WITH YOUR REAL DEPLOYED STREAMLIT APP URL
-DEPLOYED_BASE_URL = "https://YOUR-REAL-APP-NAME.streamlit.app"
+# REPLACE THIS AFTER YOU GET THE NEW DEPLOYED APP URL
+DEPLOYED_BASE_URL = "https://YOUR-NEW-APP-NAME.streamlit.app"
 
 
 def redirect_page(target_url: str):
@@ -47,14 +47,11 @@ if incoming_code:
 
     if row:
         increment_click(incoming_code)
-        target_url = row["original_url"]
-        st.success("Redirecting...")
-        redirect_page(target_url)
+        redirect_page(row["original_url"])
         st.stop()
     else:
         st.error("Invalid short URL.")
         st.stop()
-
 
 st.title("🔗 Link Analytics Shortener")
 st.write("Shorten any valid URL and track clicks.")
