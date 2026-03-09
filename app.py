@@ -1,8 +1,6 @@
-import html
-import time
-
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 
 from db import init_db, create_link, get_link_by_code, increment_click, get_all_links
 from utils import normalize_url, is_valid_url, generate_short_code, build_short_url
@@ -15,8 +13,28 @@ st.set_page_config(
 
 init_db()
 
-# PUT YOUR DEPLOYED STREAMLIT URL HERE AFTER DEPLOYMENT
-DEPLOYED_BASE_URL = "https://YOUR_REAL_STREAMLIT_URL.streamlit.app"
+# AFTER DEPLOYMENT, REPLACE THIS WITH YOUR REAL STREAMLIT APP URL
+DEPLOYED_BASE_URL = "https://YOUR-REAL-APP-NAME.streamlit.app"
+
+
+def redirect_page(target_url: str):
+    redirect_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta http-equiv="refresh" content="0; url={target_url}">
+        <script>
+            window.location.replace("{target_url}");
+        </script>
+        <title>Redirecting...</title>
+    </head>
+    <body>
+        <p>Redirecting...</p>
+        <p>If you are not redirected, <a href="{target_url}" target="_self">click here</a>.</p>
+    </body>
+    </html>
+    """
+    components.html(redirect_html, height=120)
 
 
 # -----------------------------
@@ -31,22 +49,9 @@ if incoming_code:
     if row:
         increment_click(incoming_code)
         target_url = row["original_url"]
-        safe_url = html.escape(target_url, quote=True)
 
-        st.markdown("## Redirecting...")
-        st.caption("If redirect does not happen automatically, click the link below.")
-
-        st.markdown(
-            f"""
-            <meta http-equiv="refresh" content="0; url={safe_url}">
-            <script>
-                window.location.href = "{safe_url}";
-            </script>
-            <a href="{safe_url}" target="_self">Click here to continue</a>
-            """,
-            unsafe_allow_html=True
-        )
-        time.sleep(0.2)
+        st.success("Redirecting to original URL...")
+        redirect_page(target_url)
         st.stop()
     else:
         st.error("Invalid short URL.")
