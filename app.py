@@ -1,3 +1,4 @@
+import json
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
@@ -13,33 +14,31 @@ st.set_page_config(
 
 init_db()
 
-# AFTER DEPLOYMENT, REPLACE THIS WITH YOUR REAL STREAMLIT APP URL
+# REPLACE THIS WITH YOUR REAL DEPLOYED STREAMLIT APP URL
 DEPLOYED_BASE_URL = "https://YOUR-REAL-APP-NAME.streamlit.app"
 
 
 def redirect_page(target_url: str):
+    safe_target = json.dumps(target_url)
     redirect_html = f"""
     <!DOCTYPE html>
     <html>
     <head>
         <meta http-equiv="refresh" content="0; url={target_url}">
         <script>
-            window.location.replace("{target_url}");
+            window.top.location.href = {safe_target};
         </script>
         <title>Redirecting...</title>
     </head>
     <body>
         <p>Redirecting...</p>
-        <p>If you are not redirected, <a href="{target_url}" target="_self">click here</a>.</p>
+        <p>If you are not redirected, <a href="{target_url}" target="_top">click here</a>.</p>
     </body>
     </html>
     """
     components.html(redirect_html, height=120)
 
 
-# -----------------------------
-# REDIRECT MODE
-# -----------------------------
 query_params = st.query_params
 incoming_code = query_params.get("code")
 
@@ -49,8 +48,7 @@ if incoming_code:
     if row:
         increment_click(incoming_code)
         target_url = row["original_url"]
-
-        st.success("Redirecting to original URL...")
+        st.success("Redirecting...")
         redirect_page(target_url)
         st.stop()
     else:
@@ -58,20 +56,15 @@ if incoming_code:
         st.stop()
 
 
-# -----------------------------
-# MAIN APP
-# -----------------------------
 st.title("🔗 Link Analytics Shortener")
-st.write("Paste a long URL, generate a short link, and track click analytics.")
+st.write("Shorten any valid URL and track clicks.")
 
 st.caption(f"Configured deployed app URL: {DEPLOYED_BASE_URL}")
 
-st.subheader("Create Short URL")
-
 with st.form("shortener_form", clear_on_submit=True):
     original_url_input = st.text_input(
-        "Enter original URL",
-        placeholder="https://google.com or youtube.com/watch?v=..."
+        "Enter long URL",
+        placeholder="https://amazon.in/... or youtube.com/watch?v=..."
     )
     submitted = st.form_submit_button("Generate Short URL")
 
@@ -79,13 +72,13 @@ if submitted:
     original_url = normalize_url(original_url_input)
 
     if not DEPLOYED_BASE_URL.strip():
-        st.error("Deployed app URL is missing.")
+        st.error("Deployed base URL is missing.")
     elif "localhost" in DEPLOYED_BASE_URL.lower() or "127.0.0.1" in DEPLOYED_BASE_URL.lower():
-        st.error("Configured app URL cannot be localhost.")
+        st.error("Localhost is not allowed.")
     elif not original_url_input.strip():
         st.error("URL cannot be empty.")
     elif not is_valid_url(original_url):
-        st.error("Please enter a valid original URL.")
+        st.error("Please enter a valid URL.")
     else:
         short_code = generate_short_code()
         create_link(original_url, short_code)
@@ -98,14 +91,12 @@ if submitted:
 st.subheader("Dashboard")
 
 rows = get_all_links()
-
 if rows:
     data = []
     for row in rows:
-        short_url = build_short_url(DEPLOYED_BASE_URL, row["short_code"])
         data.append({
             "Original URL": row["original_url"],
-            "Short URL": short_url,
+            "Short URL": build_short_url(DEPLOYED_BASE_URL, row["short_code"]),
             "Clicks": row["click_count"],
             "Created At": row["created_at"]
         })
