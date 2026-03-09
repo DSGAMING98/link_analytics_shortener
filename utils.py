@@ -7,6 +7,7 @@ from db import get_link_by_code
 
 def normalize_url(url: str) -> str:
     url = url.strip()
+
     if not url:
         return ""
 
