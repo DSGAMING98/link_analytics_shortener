@@ -19,11 +19,10 @@ def normalize_url(url: str) -> str:
 
 def is_valid_url(url: str) -> bool:
     try:
-        parsed = urlparse(url.strip())
+        parsed = urlparse(url)
         return (
             parsed.scheme in ("http", "https")
             and bool(parsed.netloc)
-            and "." in parsed.netloc
         )
     except Exception:
         return False
@@ -31,7 +30,6 @@ def is_valid_url(url: str) -> bool:
 
 def generate_short_code(length: int = 6) -> str:
     chars = string.ascii_letters + string.digits
-
     while True:
         code = "".join(random.choices(chars, k=length))
         if get_link_by_code(code) is None:
