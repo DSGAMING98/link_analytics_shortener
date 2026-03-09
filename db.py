@@ -43,10 +43,7 @@ def create_link(original_url: str, short_code: str):
 def get_link_by_code(short_code: str):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute(
-        "SELECT * FROM links WHERE short_code = ?",
-        (short_code,)
-    )
+    cur.execute("SELECT * FROM links WHERE short_code = ?", (short_code,))
     row = cur.fetchone()
     conn.close()
     return row
