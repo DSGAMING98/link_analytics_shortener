@@ -15,23 +15,8 @@ st.set_page_config(
 
 init_db()
 
-
-def get_base_url() -> str:
-    """
-    On Streamlit Cloud / deployed env, this gets the real app URL.
-    If it cannot detect it, user must manually provide the deployed URL.
-    """
-    try:
-        headers = st.context.headers
-        host = headers.get("host", "")
-        proto = headers.get("x-forwarded-proto", "https")
-
-        if host:
-            return f"{proto}://{host}"
-    except Exception:
-        pass
-
-    return ""
+# PUT YOUR DEPLOYED STREAMLIT URL HERE AFTER DEPLOYMENT
+DEPLOYED_BASE_URL = "https://YOUR_REAL_STREAMLIT_URL.streamlit.app"
 
 
 # -----------------------------
@@ -74,14 +59,7 @@ if incoming_code:
 st.title("🔗 Link Analytics Shortener")
 st.write("Paste a long URL, generate a short link, and track click analytics.")
 
-detected_base_url = get_base_url()
-
-base_url = st.text_input(
-    "Deployed App Base URL",
-    value=detected_base_url,
-    placeholder="https://your-real-app-name.streamlit.app",
-    help="Enter your deployed Streamlit app URL. Do not use localhost."
-)
+st.caption(f"Configured deployed app URL: {DEPLOYED_BASE_URL}")
 
 st.subheader("Create Short URL")
 
@@ -95,10 +73,10 @@ with st.form("shortener_form", clear_on_submit=True):
 if submitted:
     original_url = normalize_url(original_url_input)
 
-    if not base_url.strip():
-        st.error("Please enter your deployed app URL. Localhost is not allowed.")
-    elif "localhost" in base_url.lower() or "127.0.0.1" in base_url.lower():
-        st.error("Localhost links are not allowed. Use your deployed Streamlit app URL.")
+    if not DEPLOYED_BASE_URL.strip():
+        st.error("Deployed app URL is missing.")
+    elif "localhost" in DEPLOYED_BASE_URL.lower() or "127.0.0.1" in DEPLOYED_BASE_URL.lower():
+        st.error("Configured app URL cannot be localhost.")
     elif not original_url_input.strip():
         st.error("URL cannot be empty.")
     elif not is_valid_url(original_url):
@@ -106,7 +84,7 @@ if submitted:
     else:
         short_code = generate_short_code()
         create_link(original_url, short_code)
-        short_url = build_short_url(base_url, short_code)
+        short_url = build_short_url(DEPLOYED_BASE_URL, short_code)
 
         st.success("Short URL created successfully!")
         st.code(short_url, language=None)
@@ -119,7 +97,7 @@ rows = get_all_links()
 if rows:
     data = []
     for row in rows:
-        short_url = build_short_url(base_url, row["short_code"]) if base_url else f"?code={row['short_code']}"
+        short_url = build_short_url(DEPLOYED_BASE_URL, row["short_code"])
         data.append({
             "Original URL": row["original_url"],
             "Short URL": short_url,
